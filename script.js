@@ -6,12 +6,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const messagesContainer = document.getElementById('messages');
 
+    // Detect iframe and adjust z-index
+    if (window.self !== window.top) {
+        // In iframe: boost z-index
+        document.getElementById('chatbot-container').style.zIndex = '10000';
+        // Optional: Notify parent of resize needs
+        window.addEventListener('resize', () => {
+            window.parent.postMessage({ type: 'chatbot-resize', height: document.body.scrollHeight }, '*');
+        });
+    }
+
     // Toggle chat window
-    chatIcon.addEventListener('click', () => {
+    chatIcon.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent bubble to parent iframe
         chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
     });
 
-    closeBtn.addEventListener('click', () => {
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         chatWindow.style.display = 'none';
     });
 
@@ -28,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage("...", 'bot');
 
         try {
-            const response = await fetch('https://7-destination-bot.vercel.app/', {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -36,11 +48,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ message })
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
             const data = await response.json();
             
             // Remove typing indicator
             const botMessages = messagesContainer.querySelectorAll('.bot');
-            botMessages[botMessages.length - 1].remove();
+            if (botMessages.length > 0) {
+                botMessages[botMessages.length - 1].remove();
+            }
             
             // Add bot response
             addMessage(data.reply, 'bot');
@@ -48,14 +66,22 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error:', error);
             // Remove typing indicator
             const botMessages = messagesContainer.querySelectorAll('.bot');
-            botMessages[botMessages.length - 1].remove();
+            if (botMessages.length > 0) {
+                botMessages[botMessages.length - 1].remove();
+            }
             addMessage("Sorry, I'm having trouble responding right now.", 'bot');
         }
     }
 
-    sendBtn.addEventListener('click', sendMessage);
+    sendBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sendMessage();
+    });
     userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
+        if (e.key === 'Enter') {
+            e.stopPropagation();
+            sendMessage();
+        }
     });
 
     function addMessage(text, sender) {
