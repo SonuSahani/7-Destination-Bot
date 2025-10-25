@@ -2,7 +2,7 @@
   "name": "travel-chatbot",
   "version": "1.0.0",
   "dependencies": {
-    "@google/generative-ai": "^0.2.4"
+    "@google/genai": "^1.27.0"
   },
   "engines": {
     "node": ">=18"
