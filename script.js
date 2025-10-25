@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage("...", 'bot');
 
         try {
-            const response = await fetch('/api/chat', {
+            const response = await fetch('https://7-destination-bot.vercel.app/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
