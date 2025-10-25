@@ -97,3 +97,18 @@
     border-radius: 20px;
     cursor: pointer;
 }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#chatbot-container {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 999999;
+  transform: scale(0.9);
+  transform-origin: bottom right;
+}
