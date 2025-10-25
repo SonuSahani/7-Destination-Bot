@@ -1,6 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+import { GoogleGenAI } from "@google/genai";
 
 export default async function handler(req, res) {
     // CORS headers for iframe/cross-origin support
@@ -22,6 +20,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ reply: "Please enter a message." });
     }
 
+    // Initialize the new SDK client
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
     try {
         // System instruction for better prompt separation
         const systemInstruction = `You are a travel assistant for a tour company. 
@@ -37,18 +38,21 @@ export default async function handler(req, res) {
         If asked about unrelated topics, respond with:
         "I can only assist with travel and tour-related questions. How can I help you with your travel plans?"`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-        const chat = model.startChat({
+        // Create a new chat session with system instruction (mimics old startChat)
+        const chat = await ai.chats.create({
+            model: 'gemini-2.5-flash', // Recommended model for chat/general use in Oct 2025
             systemInstruction: systemInstruction
         });
+
+        // Send the user message
         const result = await chat.sendMessage(message);
-        const text = result.response.text();
+        const text = result.text;
 
         res.status(200).json({ reply: text });
     } catch (error) {
         console.error('Gemini API Error:', error);
         let errorReply = "I'm having trouble processing your request right now.";
-        if (error.message && error.message.includes('API key')) {
+        if (error.message && (error.message.includes('API key') || error.message.includes('auth'))) {
             errorReply = "API configuration issue—please contact the administrator.";
         }
         res.status(500).json({ reply: errorReply });
